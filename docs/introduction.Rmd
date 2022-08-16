@@ -1,0 +1,87 @@
+# Introduction {-}
+
+The coexistence of _Helicobacter pylori_ (HP) with humans dates back to ancient times. 
+However, it is the discovery of this microorganism about four dacades ago by that started to raise increasing awareness to its presence worldwide [@marshallUnidentifiedCurvedBacilli1984].
+
+Since its discovery, there has been considerable controversy about the exact role of HP and whether it is part of health or disease in humans.
+Accumulating body of evidence suggests its association with chronic gastritis, peptic ulcer, and gastric cancer and that virulent HP strains (type I) that carry the cytotoxin-associated gene pathogenicity island (cag PAI) in their genome are associated with more severe clinical outcome, as opposed to those lacking the type II cag PAI.
+The cag PAI is 40kb in size that encodes about 32 genes including cytotoxin-associated gene A (CagA), which has been recognized as a marker for the whole pathogenicity island [@tummuruCloningExpressionHighmolecularmass1993;@covacciMolecularCharacterization128kDa1993].
+Another virulence factor, which is not encoded by cag PAI, is the vacuolating cytotoxin A (VacA).
+It is a multi-functional toxin that is secreted by virtually all HP strains and tends to from vacuoles in the gastric epithelial cells [@coverPurificationCharacterizationVacuolating1992].
+
+The virulence factor neutrophil-activating protein (NAP) is a 150kDa protein that is also encoded by genes outside the cag PAI and is made of 12 subunits and  that attracts and activates neutrophils to produce oxygen radicals and chemokines like IL-8 [@polenghiNeutrophilactivatingProteinHelicobacter2007].
+
+There have been several reports proposing the potential use of NAP for therapeutic strategies and vaccines because of its immune modulatory effect by redirecting Th2 to Th1 immune response [@deliosNeutrophilActivatingProtein2007;@debernardImmuneModulatingActivity2010].
+Although a host can be co-infected by multiple HP strains which in turn display high genetic diversity due to extensive recombination rates, horizontal gene transfer, or mutations, it is hardly to conceive that identifying microbial virulence factors can be of any interpretative value to determine the clinical outcome in a given host.
+The net outcome will be greatly determined by the host factors and how the host would interact with the microbial infection.
+However, what we know so far is that CagA positive HP strains are most strongly correlated with both the risk of disease (peptic ulcer and cancer), and protection from other diseases such as esophageal and allergic diseases [@backertRoleCagAGastric2016].
+This presents a disturbing paradox in research as well as in clinical practice where HP should be labeled both detrimental and protective at the same time in any given host.
+To reconcile this paradox, Blaser proposed three types of relationships: dystopia; a set of diseases because of the organism being in a wrong location, eutopia; healthy state as the organism is in its right location, and atopia; a different set of diseases because of the organism being eliminated from the host [@blaserHypothesisChangingRelationships1999].
+
+The international consensus now is that HP infection is a major risk factor for peptic ulcer and gastric cancer and should be treated once detected [@malfertheinerManagementHelicobacterPylori2017].
+To this end, a triple therapy with proton pump inhibitor (PPI), clarithromycin, and amoxicillin/metronidazole for 7 to 14 days to treat HP infection was proposed and has become the _de facto_ standard.
+At the same time, there was a steady increase in resistance rates to the triple therapy worldwide and the emergence of multi-drug resistant HP strains, and hence a quadruple therapy to HP is now becoming first-line treatment with future therapeutic efficacy being under increasing threat [@debraekeleerFuturePerspectivePotential2018].
+Moreover, with the ever growing consumption of antimicrobials worldwide for other reasons, in general, or for HP infection, in particular, has resulted in greater health concern because of its detrimental side effects leading to treatment interruption, lower HP eradication rates, clonal selection of resistant bacteria, alteration in the gut microbiota (dysbiosis), and a decline in the diversity of gut microbiome [@hsuHelicobacterPyloriEradication2018;@cornejo-parejaPyloriEradicationTreatment2019].
+Given the above data, it remains possible that HP eradication program to prevent gastric cancer prevention defeats its own purpose of cost-effectiveness when the costs of treating other rising diseases due to HP absence (atopia) would be factored in to the overall cost.
+The increasing trend of antimicrobial resistance and health concerns raises the question whether the current eradication strategy is rationally sustainable in the future and how we can efficiently pursue safer possible alternatives such as vaccines or probiotics [@parkNonmicrobialApproachHelicobacter2013;@saracinoAntimicrobialEfficacyFive2020].
+
+Despite the fact that vaccine development against HP started nearly 3 decades ago, there is no licensed vaccine yet.
+It is remarkable to see only a few vaccine preclinical studies progress into clinical trials, which raises doubts whether currently used animal models offer good translatability in humans to assess candidate vaccines [@walduckImmunityVaccineDevelopment2019].
+Another aspect to be considered is that our knowelde about mucosal immune response to HP is continuously evolving and these studies were designed utilizing the best knowledge available at the time of their inception.
+Early on, many studies were expecting that sterilizing immunity against HP is antibody-mediated but subsequent studies showed that protection could be achieved in mice in the absence of antibodies suggesting that cellular immunity has more important role to play in immunity [@ermakImmunizationMiceUrease1998;@radCD25Foxp3Cells2006;@harbourHostNonresponsivenessDoes2015].
+
+This was later supported by a vaccine trial showing that HP clearance, independent of the given vaccine, was correlated with cellular, rather than humoral, immune response to HP antigens in a challenge model with a Baylor CagA negative strain [@aebischerCorrelationCellResponse2008].
+It is widely believed that HP successfully colonizes the antrum of the stomach during the lifetime of the individual since early childhood and the majority of these people would develop chronic, yet asymptomatic, gastritis and only a small proportion would develop dyspeptic symptoms, which supports the hypothesis that HP is yet another opportunistic commensal living in its natural habitat.
+One proposed mechanism to fulfill this adaptation is the ability of HP to induce Treg cells to suppress excessive proinflammatory responses of T effector cells and hence promote bacterial persistence.
+
+There is also evidence that HP infection not only efficiently reprograms dendritic cells (DCs) toward a tolerogenic phenotype but also induces Tregs with highly suppressive activity through $\gamma$-glutamyl transpeptidase (GGT) and VacA [@oertliHelicobacterPyloriGglutamyl2013].
+This finding in mice provided impetus to evaluate a candidate vaccine (IMX101) which consists of GGT and a non-toxic derivative of cholera toxin as an adjuvant in a phase I clinical trial.
+
+The novel approach by this vaccine is to abrogate the immunemodulatory role of GGT by inducing neutralizing antibodies which would eventually lead to HP clearance by the unsuppressed effector T cells.
+This study, whose results are not published yet, is a good example of how our evolving knowledge about HP mucosal immunology can impact future designs of vaccines.
+
+On the other hand, a large body of literature indicates that eliminating HP from its natural habitat can do more harm than good.
+More recently, it has been demonstrated that HP can mediate an immunoregulatory effect not only in the stomach locally but also in distant sites via HP-induced Treg cells suggesting an interesting contribution to the general health of the host [@arnoldBATF3dependentDendriticCells2019;@borbetRoleChangingHuman2019].
+
+In the wake of emerging reports indicating a protective role for HP from other diseases, time is high to re-evaluate the whole idea of seeking a vaccine with a license to kill HP in humans indiscriminately and whether this approach is still justifiable from the ethical point of view.
+Perhaps a time will come when studies will pursue re-establishing a lost HP strain in a given host to naturally restore health rather than trying to lose one that has already been delivered from the mother and established over a lifetime ending up with one of the atopia diseases [@backertRoleCagAGastric2016;@borbetRoleChangingHuman2019].
+
+Furthermore, it is hard to say that challenge models of vaccine trials are not fraught with ethical and health concerns as to the infected volunteers unless they are conducted with enough safeguards in place.
+One of these safeguards is to use a defined HP strain that is known to be sensitive to antimicrobials so that it can be easily eliminated after the study is completed.
+Nevertheless, infecting participants with a safe strain of HP in a challenge model can provide a unique opportunity to study host responses to interventions in a more controlled way and would eliminate confounding factors due to strain differences as all participants would receive the same defined Hp strain.
+Indeed, studying HP infection in a well controlled study design can be as insightful as studying the vaccine at hand.
+
+Given the complex structure of the gastric mucosa being at the interface of interaction, clear understanding of HP mucosal immunology not only from the perspective of dystopia but also from the perspective of atopia is key to reconcile contradicting reports about the role of HP and to explain cross-subject variability in host responses before deciding what kind of intervention is needed to promote general health in a given individual.
+Our understanding of mucosal immunology has largely been reshaped by recently obtained data using major technological advances in different fields as well as by the accumulating data from previous studies.
+What has become evident so far is that HP immune respond is mediated mainly by Th1, Th17, Treg, and Th2 cells with their respective cytokine signatures in a tightly balanced equilibrium.
+Furthermore, the final clinical outcome is greatly determined by a complex interplay of these cells mediated by a network of cytokines to promote proinflammatory or immunoregulatory effects.
+
+Consequently, the updated Sydney classification system (1994), in its current form, is unable to predict which T cells are mediating what effect in a given host, simply because it was basically devised to report gastritis based on a cellular rather than a molecular morphology; activity by grading polymorphonuclear (PMNs) infiltrate and chronicity by grading the mononuclear cells (MNCs) infiltrate irrespective of their immunological profile.
+Therefore, conditions conducive to health which are dominated by regulatory T cells in the presence of HP colonization tend to be labeled HP chronic gastritis by the updated Sydney classficiation system and would frequently warrant HP therapy.
+In asymptomatic HP carriers it was demonstrated that HP-specifc immune response consisted of high levels of IL-10 secreting Treg cells which was significantly reduced in subjects with peptic ulcer disease who showed more Th1 and Th2 responses [@robinsonHelicobacterPyloriinducedPeptic2008].
+Other data demonstrated that HP infection could prevent allergic asthma through the induction of Treg cells, and this protection could be abrogated by HP eradication in mouse models [@arnoldHelicobacterPyloriInfection2011].
+Given the immunemodulatory role of HP in distant sites and recent reports of a negative association between HP, espcially CagA positive strains, with asthma and inflammatory bowel diseases (IBD) in humans [@chenAccumulatedEvidenceHelicobacter2017;@castano-rodriguezDualRoleHelicobacter2017], it remains unclear whether eradication of HP will ever be promoting health in future generations.
+
+Therefore, a more tailored approach needs to be explored that would take into consideration the risk of HP presence as well as its absence, HP strain specificity to a given host, integrity of the mucosal barrier, and the cytokine profile at the mucosal interface.
+Since the dawn of this century, there has been a growing number of new cytokines to be found engaged in infections, making it potentially challenging to predict which ones have more impact in shaping the final clinical outcome in a given host.
+Even more challenging, is the emerging concept that cells can interpret cytokine signals in ways that give rise to different outcomes, depending on how messages are perceived, thus rendering the earlier concept of "one lymphokine one function" largely obsolete [@taitwojnoImmunobiologyInterleukin12Family2019].
+
+Further layers of complexity have been introduced amid growing reports of cytokine redundancy, T helper cell plasticity, and the potential interconversion among different subsets such as the ability of Th17 to convert into Th1, Th2, or Treg cells depending on the surrounding network of cytokines [@leeDevelopmentalPlasticityTh172009;@leeLateDevelopmentalPlasticity2009;@cosmiIdentificationNovelSubset2010;@espluguesControlTh17Cells2011;@dixonTh17CellsHelicobacter2019].
+One family of cytokines known as "IL-12 family" has gained special interest recently because of its unique structural and functional properties.
+Each cytokine is typically a heterodimer made of one $\alpha$ subunit and one $\beta$ subunit, and each subunit binds to its own receptor.
+The co-expression of both subunits or chains is required for secretion of the bioactive cytokine.
+Production of these cytokines is hence limited by expression of their $\alpha$ chains which are normally expressed at lower levels than their respective $\beta$ chains.
+Nevertheless, several reports suggested that noncanonical bioactive homodimers or isolated subunits can also exist.
+To date, there has been five subunits detected in humans; three $\alpha$ subunits: p35 (IL12A), p19 (IL23A), and p28 (IL27A), and two $\beta$ subunits: p40 (IL12B), and Ebi3 (EBI3).
+While six possible heterodimeric cytokines are possible, only four heterdimeric cytokines are known to exist so far: IL-12 (p35/p40), IL-23 (p19/p40), IL-27 (p28/Ebi3), and IL-35 (p35/Ebi3).
+The cytokine (p28/p40) has never been reported to exist naturally and recent data indicated that cytokine IL-39 (p19/Ebi3) is detected only in mice [@wangNovelIL23p19Ebi32016}, but in humans it remains hypothetical \citep{bridgewoodIL23p19EBI3Heterodimeric2019].
+The structural homology of the chains in this family allows for a complex combinatorial biology in which one subunit might be able to pair with a number of homologous subunits to form functionally distinct cytokine heterodimers or multimeric receptor complexes.
+Indeed, this unique chain sharing property endows this family a divergent spectrum of immunological functions ranging from proinflammatory to anti-inflammatory responses via different combinations of chains and their receptors, making it an attractive candidate to study the mucosal immune response in HP infection.
+However, studying the phenotypic aspect of these molecules poses a technical challenge given the shortage of reliable reagents to detect biologically functional chains or other yet undiscovered combinations.
+
+The objective of this study is to characterize the mucosal immune response of healthy volunteers who participated in a previous randomized vaccine trial and were challenged with BCM-300 CagA positive HP strain (clinicaltrials.gov, NCT00736476) after introducing a trivalent HP3 (VacA, CagA, NAP) vaccine or a placebo [@malfertheinerEfficacyImmunogenicitySafety2018].
+To this end, IL-12 family of cytokines along with IL8 and IL17A were investigated using reverse transcription quantitative real-time polymerase chain reaction (RT-qPCR) in gastric biopsies at different time points of the study and extended to follow-up visits after the challenge over a period of around two years after enrollment.
+Principal component analysis was then utilized to summarize the multidimensional gene expression data before applying unsupervised clustering algorithms.
+Clusters were then described using the metadata of the clinical trial and previous literature in order to formulate a hypothesis about the interaction between HP and its human host.
+
+

@@ -1,0 +1,86 @@
+---
+title: Exploratory Analysis of The Helicobacter pylori Vaccine Trial in Magdeburg
+date: '`r format(Sys.time(), "%Y-%B-%d")`'
+author: drafted by Fadi F. Al-Sammak
+E-mail: ffsammak@gmail.com
+bibliography: [manuscript.bib, packages.bib]
+biblio-style: apalike
+link-citations: yes
+bookdown::gitbook:
+  config:
+    toc:
+      collapse: subsection
+      scroll_highlight: true
+      before: null
+      after: null
+    toolbar:
+      position: fixed
+    edit: true
+    download: true
+    search:
+      engine: lunr # or fuse
+      options: null
+    fontsettings:
+      theme: sepia
+      family: sans
+      size: 3
+    sharing:
+      facebook: true
+      github: false
+      twitter: true
+      linkedin: false
+      weibo: false
+      instapaper: false
+      vk: false
+      whatsapp: false
+      all: ["facebook", "twitter", "linkedin", "weibo", "instapaper"]
+    info: true
+---
+
+# Abstract {-}
+
+```{r include = FALSE}
+rmarkdown::pandoc_version()
+# automatically create a bib database for R packages
+knitr::write_bib(c(.packages(), "bookdown", "knitr", "rmarkdown"), "packages.bib")
+bookdown::gitbook(fig_caption = TRUE,
+        number_sections = FALSE,
+        self_contained = FALSE,
+        anchor_sections = TRUE,
+        lib_dir = "libs",
+        global_numbering = !number_sections,
+        pandoc_args = NULL,
+        template = "gitbook",
+        split_by = c("rmd"),
+        split_bib = FALSE,
+        table_css = TRUE)
+```
+
+## Objective ##
+
+Despite all the efforts to develop an effective vaccine against _Helicobacter pylori_, no vaccine has yet been deemed successful.
+Better understanding of the mucosal immune response in the context of host-microbe relationship seems to be key in this endeavour.
+An important facet of this response is the IL-12 cytokine family which gained much of their importance due to their ability to capture a broad spectrum of immune functions ranging from clearance to tolerance making them a good candiate to represent human mucosal immune response to this non-invasive microbe.
+
+## Design ##
+
+With the help of gene expression data of these cytokines and their receptors along with IL8 and IL17A using real-time PCR and heuristic data mining tools, 3 clusters could be revealed based on 218 gastric endoscopic biopsies obtained from 34 healthy volunteers at different time intervals from both antrum and corpus.
+Althoug the assignment of biopsies to these clusters was based on the transcriptomic data only, their meaning was substantially deduced from the experimental setting and associated metadata as part of a randomized, observer-blind, placebo-controlled vaccine trial that took place in Magdeburg, Germany.
+  
+## Results ##
+
+Based on their description in the light of multiple supportive data, these 3 clusters were labeled proactive (P), quiescent (Q), and reactive (R).
+While the Q cluster pictures a state of minimal or no interaction between the microbe and its host, the P and R clusters would picture a contrasting nature of interaction as health is opposed to disease.
+The P cluster demonstrated more stability in assignment using different algorithms as three participants were consistently labeled with this cluster from the first visit onwards whereas only one participant acquired it after receiving the infectious challenge.
+Moreover, this cluster showed consistent expression of IL17A and IL23A but not IL8 or other proinflammatory cytokines.
+This signature in expression along with oher metadata collectively suggest a non-reactive healthy mucosal state where the mucosa is proactively hospitable to a commensal bacterium contributing to a long acting immunity probably via the induction of p19 (IL23A) molecule.
+Based on this premise, eliminating this bacterium from these individuals could upset a delicate balanced state in this host-microbe relationship.
+Conversely, the R cluster which carried the signature of proinflammatory cytokines pictures a reactive state of mucosal response to a microbe living in a precarious environment liable to various pathologies which have been directly attributed to _H. pylori_ in the main body of literature to date.
+
+## Conclusions ##
+
+Predicting these 3 classes in gastric biopsies based on gene expression data would provide a possible opportunity for a more tailored approach both in clinical research and practice.
+To this end, larger data set are required to validate the meaning and significance of these 3 clusters in a larger population before moving the P-Q-R classification from bench to bedside.
+
+## Keywords ##
+Helicobacter pylori, RT-qPCR, humans, clinical trial, cytokines, IL-12 family, gastric mucoss, gene expression, mRNA, IL-17, IL-8, IL-23, exploratory analysis, Principal Component Analysis, clustering, biopsy, GastroPanel.

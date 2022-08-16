@@ -1,0 +1,905 @@
+# Supplement: Data Analysis #
+
+```{r setup, include = FALSE}
+
+library(tidyverse)
+library(lubridate)
+library(rmarkdown)
+library(prettydoc)
+library(bookdown)
+library(FactoMineR)
+library(factoextra)
+library(NbClust)
+library(clValid)
+
+knitr::opts_chunk$set(echo = FALSE,
+                      message = FALSE,
+                      warning = FALSE)
+```
+
+## Data import from csv file ##
+
+The dataset of the vaccine trial was stored in a (csv) file and wrangled to make it suitable for analysis and then converted to a tibble and saved in (rds) format in order to preserve the class and type of variables upon importing in the future.
+
+```{r dataset-csv}
+dataset <- read.table(file = "./data-csv/dataset.csv", header = TRUE, sep = ",", na = "", numerals = c("no.loss"))
+
+df <- dataset  %>%
+  select(id, visitid, bplex, rtpcr, nbr, age, sex, vaccine, visit, visitdate, site, hpv10, ubt, fat, histology, acute, chronic, culture, rutac, rut, pgi, pgii, g17, hpigg, caga, vaca, nap, actb, rpl29, b2m, il8, il17a, p19, p19r, ebi3, ebi3r, p35, p35r, p40, p40r, p28r, pdgfbb, il1b, ip10, il1ra, il2, il4, il5, il6, il7, il8.1, il9, il10, il12, il13, il15, il17, eotaxin, fgfb, gcsf, gmcsf, ifng, mcp1, mip1a, mip1b, rantes, tnfa, vegf) %>%
+  rename(ID = id, Nbr = nbr, Age = age, Sex = sex, Group = vaccine, Visit = visit, Date = visitdate, Site = site, HP = hpv10, UBT = ubt, FAT = fat, Histology = histology, Acute = acute, Chronic = chronic, Culture = culture, RUTac = rutac, RUT = rut, PG1 = pgi, PG2 = pgii, G17 = g17, HPIgG = hpigg, CagA = caga, VacA = vaca, NAP = nap, ACTB = actb, RPL29 = rpl29, B2M = b2m, IL8 = il8, IL17A = il17a, IL23A = p19, IL23R = p19r, EBI3 = ebi3, IL6ST = ebi3r, IL12A = p35, IL12RB2 = p35r, IL12B = p40, IL12RB1 = p40r, IL27RA = p28r, "PDGF-BB" = pdgfbb, "IL-1B" = il1b, "IP-10" = ip10, "IL-1ra" = il1ra, "IL-2" = il2, "IL-4" = il4, "IL-5" = il5, "IL-6" = il6, "IL-7" = il7, "IL-8" = il8.1, "IL-9" = il9, "IL-10" = il10, "IL-12" = il12, "IL-13" = il13, "IL-15" = il15, "IL-17" = il17, Eotaxin = eotaxin, "FGF-basic" = fgfb, "G-CSF" = gcsf, "GM-CSF" = gmcsf, "IFN-g" = ifng, "MCP-1" = mcp1, "MIP-1a" = mip1a, "MIP-1b" = mip1b, "RANTES" = rantes, "TNF-a" = tnfa, "VEGF" = vegf) %>%
+  mutate(bplex = as.factor(bplex),
+         rtpcr = as.factor(rtpcr),
+         Nbr = as.factor(Nbr),
+         Sex = fct_relevel(as.factor(Sex), "Male", after = 0),
+         Group = fct_relevel(as.factor(Group), "Placebo", after = 0),
+         Acute = fct_relevel(as.factor(Acute), "No", after = 0),
+         Chronic = fct_relevel(as.factor(Chronic), "No", after = 0),
+         Visit = as.factor(Visit),
+         Date = lubridate::ymd(Date), 
+         Site = as.factor(Site)) %>%
+  mutate(Acute = fct_recode(Acute,
+                            "syd0" = "No",
+                            "syd1" = "Mild",
+                            "syd2" = "Moderate",
+                            "syd3" = "Severe")) %>%
+  mutate(Chronic = fct_recode(Chronic,
+                              "Syd0" = "No",
+                              "Syd1" = "Mild",
+                              "Syd2" = "Moderate",
+                              "Syd3" = "Severe"))  %>%
+  mutate(HP = fct_recode(HP,
+                         "HPN" = "Negative",
+                         "HPP" = "Positive")) %>%
+  mutate(UBT = fct_recode(UBT,
+                          "UBTn" = "Negative",
+                          "UBTp" = "Positive")) %>%
+  mutate(FAT = fct_recode(FAT,
+                          "FATn" = "Negative",
+                          "FATp" = "Positive")) %>%
+  mutate(Histology = fct_recode(Histology,
+                                "HISTn" = "Negative",
+                                "HISTp" = "Positive")) %>%
+  mutate(Culture = fct_recode(Culture,
+                              "CULTn" = "Negative",
+                              "CULTp" = "Positive"))  %>%
+  mutate(RUTac = fct_recode(RUTac,
+                            "RUTn" = "Negative",
+                            "RUTp" = "Positive"))  %>%
+  mutate(RUT = fct_recode(RUT,
+                          "RUTn" = "Negative",
+                          "RUTp" = "Positive"))  %>%
+  mutate(MATCH = Visit %in% c("V04", "V05", "V06", "V07", "V08", "V09", "V10", "V11", "V12", "V13")) %>%
+  group_by(Nbr) %>%
+  mutate(Days = lubridate::time_length(Date - min(Date, na.rm = TRUE), unit = "days"),
+         HPDays = ifelse(MATCH == TRUE, lubridate::time_length(Date - min(Date[MATCH == TRUE], na.rm = TRUE), unit = "days"), NA)) %>%
+  ungroup() %>%
+  select(ID:Date, Days, HPDays, everything(), -MATCH) %>%
+  as_tibble()
+
+## df %>%
+##     select(where(is.factor)) %>%
+##     map(., ~ levels(.))
+
+saveRDS(object = df, file = "./data-rds/dataset.rds")
+```
+
+To import the dataset we do the following: 
+
+```{r data-import, echo = TRUE}
+dataset <- readRDS(file = "./data-rds/dataset.rds")
+
+geneEff <- c(ACTB = 2,
+             B2M = 1.95,
+             RPL29 = 2,
+             IL8 = 2,
+             IL17A = 2,
+             IL23A = 1.95,
+             IL23R = 1.95,
+             EBI3 = 2,
+             IL6ST = 1.98,
+             IL12A = 2,
+             IL12RB2 = 1.96,
+             IL12B = 2,
+             IL12RB1 = 1.9,
+             IL27RA = 2)
+
+## efficiency of IL27A was 1.95 but since it was not expressed so omitted from the vector!
+
+geneRef <- c("ACTB", "B2M", "RPL29")
+bestRef <- c("ACTB", "B2M")
+geneOI <- c("IL8", "IL17A", "IL23A", "IL23R", "EBI3", "IL6ST", "IL12A", "IL12RB2", "IL12B", "IL12RB1", "IL27RA")
+gPanel <- c("PG1", "PG2", "G17", "HPIgG")
+vacAbs <- c("CagA", "VacA", "NAP")
+Cytokine <- c("PDGF-BB", "IL-1B", "IP-10", "IL-1ra", "IL-2", "IL-4", "IL-5", "IL-6", "IL-7", "IL-8", "IL-9", "IL-10", "IL-12", "IL-13", "IL-15", "IL-17", "Eotaxin", "FGF-basic", "G-CSF", "GM-CSF", "IFN-g", "MCP-1", "MIP-1a", "MIP-1b", "RANTES", "TNF-a", "VEGF")
+```
+
+## Study visits ##
+
+Average number of days for each of the 13 visits apart from the screening one was calculated along with the median starting from S2 screening visit. The table below shows these numbers along with total number of volunteers (34 participants) and the number of them who showed up in the planend visits throughout the study, whether to take placebo (15) or HP3 vaccine (19).
+
+S2 to V11 comprise the original planned (vaccine trial), however two other visits were subsequently added (V12, V13) and will be referred to as the (add-on study). V1-V3 were the placebo/vaccine visits. V4-V10 comprise the challenge phase, where all participants received a quantified *H.pylori* inoculum at V4. The V5-V9 were for immunological screening, while V10 was designed to determine *H.pylori* status among participants 3 months post-challenge.
+The infection rate turned out to be 8/19 (42%) and 8/15 (53%) among HP3 and placebo vaccine recipients, respectively. 
+The HP positive group received eradication therapy and underwent follow-up UGE at V11 about 3 months later, whereas the second entity underwent UGE at V12 about 1 year later. Those in V12 who developed active gastritis received eradication therapy and underwent follow-up UGE about 3 months later at V13.
+
+```{r visit-days}
+visitStat <- dataset %>%
+  distinct(visitid, .keep_all = TRUE) %>%
+  group_by(Visit, Group) %>%
+  mutate(n = n()) %>%
+  group_by(Visit) %>%
+  mutate(avg = mean(Days, na.rm = TRUE), med = median(Days, na.rm = TRUE), months = med / 30) %>%
+  select(Visit, Group, n, avg, med, months) %>%
+  distinct(Visit, Group, .keep_all = TRUE) %>%
+  pivot_wider(names_from = Group, values_from = n) %>%
+  mutate(Total = Placebo + HP3) %>%
+  select(Visit, Placebo, HP3, Total, avg, med, months) 
+
+## Table
+visitStat %>%
+  select(Visit, Placebo, HP3, Total, avg, med, months)
+
+## Graph
+dataset %>%
+  distinct(visitid, .keep_all = TRUE) %>%
+  select(Nbr, Visit, Days)  %>%
+  ggplot() +
+  geom_hline(yintercept = c(360, 720), size = 2, color = "white") + 
+  geom_boxplot(aes(x = Visit, y = Days), width = 1 / 3, notch = FALSE) + 
+  geom_point(data = visitStat, aes(x = Visit, y = avg), color = "blue", shape = 22, size = 2, alpha = 0.8) + 
+  geom_text(data = visitStat, aes(Visit, med, label = med), nudge_x = 0.4, nudge_y = 0, size = 3) +
+  scale_y_continuous(breaks=seq(from = 0, to = 810, by = 60)) +
+  labs(x = NULL,
+       y = "Days after screening visit (median)",
+       title = "Distribution of visit days post screening (S2) throughout the study",
+       subtitle = "black dot is an outlier, blue square is the mean, the median is shown above the boxplot") +
+  coord_flip() 
+
+## ggsave(last_plot(), file = paste("./plots","Vaccine_visits_boxplots.pdf",sep="/"), width = 6, height = 8, units = "in", dpi = 600)
+```
+
+## Exploring the raw Cq values of genes ##
+In this study `r length (geneOI)` genes of interest were measured by using RT-qPCR and the boxplots below show the distribution of their raw (Cq) values along with 3 reference genes (ACTB, B2M, RPL29) at S2 visit from gastric biopsies of the participants.
+
+```{r genes-cq}
+dataset %>%
+  filter(Visit == "S02") %>%
+  pivot_longer(ACTB:IL27RA, names_to = "Gene", values_to = "Cq") %>%
+  select(Site, Gene, Cq) %>%
+  group_by(Gene, Site) %>%
+  mutate(N = sum(!is.na(Cq)),
+         TG = ! Gene %in% c("ACTB", "B2M", "RPL29")) %>%
+  ggplot(aes(fct_reorder(Gene, ifelse(Site == "Antrum", Cq, NA), na.rm = TRUE), Cq)) +
+  geom_boxplot(width = 1 / 2, fill = "white") + 
+  ## geom_jitter(size = 2,position = position_jitter(height = 1.0,width = 0.2))+
+  ## geom_point(shape = 15,size = 1.5,alpha=0.5,position =position_jitter(height = 1.0,width = 0.2)) +
+  geom_point(shape = 22, size = 2, color = "blue", fun.data = mean_sdl, stat = "summary") +
+  geom_text(aes(y = 42, label = paste("n=", N)), size = 3, nudge_x = 0.1) + 
+  facet_grid(facets = . ~ Site) + 
+  theme_gray(base_size = 14) +
+  coord_flip() + 
+  scale_y_continuous(limits = c(15, 42), breaks=c(15, 20, 25, 30, 35, 40),expand=c(0, 2)) +
+  labs(x = NULL,
+       y = "raw Cq values at S2",
+       title = "RT-qPCR raw Cq values from gastric biopsies",
+       subtitle = "Genes were sorted according to their Cq median values in the antrum.\n Blue square indicates mean. Number of specimens is also indicated (n)") + 
+  theme(axis.text.y = element_text(face = "italic", color = c(rep("gray70", 3), rep("gray10", 11))))
+
+## ggsave(last_plot(), file = paste("./plots","Vaccine_RawCq_boxplot.pdf",sep="/"), width = 10, height = 8, units = "in", dpi = 600) 
+```
+## Selecting the best reference genes for normalization ##
+
+These steps were followed in order to see which reference genes (RGs) or house-keeping genes are best for normalizing the target genes or genes of interest (GOI) in this study:
+
+1. Obtain the relative quanitity (RQ) of the RGs according to the corresponding efficiency of that gene (here values are no more logarithmic i.e.1 to 40, but rather linear
+
+```{r best-reference-rq, echo = TRUE}
+## Take-off values (TOP) = Crossing Point (CP) = Cycle Threshold (Ct) = Cq = log values
+df <- dataset %>%
+  filter(rtpcr %in% c("N","P")) %>%
+  mutate(across(all_of(names(geneEff)),
+                ~ geneEff[cur_column()]^(min(., na.rm = TRUE) - .),
+                .names = "{.col}_RQ"))
+```
+
+2. Populate the `ReadqPCR::qPCRBatch()` object with RQs
+
+3. Use the `NormqPCR::selectHKs()` using the populated qPCRBatch above to know the best RGs, set `log = FALSE` to avoid logarithmic transformation. 
+
+```{r best-reference-populate, echo = TRUE}
+df <- dataset %>%
+  filter(rtpcr %in% c("N","P")) %>%
+  mutate(across(all_of(names(geneEff)),
+                ~ geneEff[cur_column()]^(min(., na.rm = TRUE) - .),
+                .names = "{.col}_RQ")) %>%
+  select(ID, matches(str_c(geneRef, "RQ", sep = "_"))) %>%
+  pivot_longer(cols = ends_with("RQ"), names_to = "Detector", values_to = "Cq") %>%
+  rename(Sample = ID)
+
+write.table(df, file="./data-dput/RefGenes.txt", row.names = FALSE)
+
+RefGenes <- ReadqPCR::read.qPCR(file="./data-dput/RefGenes.txt", verbose = FALSE)
+
+mInd <- NormqPCR::selectHKs(RefGenes, method = "geNorm", Symbols = Biobase::featureNames(RefGenes), minNrHK=2, log =FALSE, trace = FALSE)
+mInd
+```
+
+The ranking of geNorm algorithm shows that using two reference genes (ACTB and B2M) rather than all 3 is superior for normalization.
+The pairwise variation (M index) of using ACTB and B2M was `r format (mInd$variation[[1]], digits = 3)` and the average expression stability (M) for using all 3 RGS was `r format(mInd$meanM[[1]], digits = 3)` which did improve to `r format(mInd$meanM[[2]], digits = 3)` by using only two.
+However Vand02 recommends a cut-off value of (0.15) for the M index, below this value the inclusion of an additional housekeeping gene would not be required. This indicates that further optimization of the current M index might be needed.
+
+4. Alternatively, the same geNorm algorithm used to select the best RGs can be demonstrated by using two functions: `SLqPCR::geneStabM()` and `NormqPCR::stabMeasureM()` to calculate the (M stability index) for each of the RGs and both them show identical results.
+
+```{r best-reference-mindex, echo = TRUE}
+df <- dataset %>%
+  filter(rtpcr %in% c("N","P")) %>%
+  mutate(across(all_of(names(geneEff)),
+                ~ geneEff[cur_column()]^(min(., na.rm = TRUE) - .),
+                .names = "{.col}_RQ")) %>%
+  select(matches(str_c(geneRef, "RQ", sep = "_")))
+NormqPCR::stabMeasureM(as.matrix(df), log = FALSE, na.rm = TRUE)
+
+SLqPCR::geneStabM(as.matrix(df), na.rm = TRUE)
+```
+
+5. Get the normalization factor (NF) by taking the geometrical mean of the best RGs
+
+6. Get the RQs of all GOIs the same way as for the RGs above
+
+7. Get the normalized RQs (NRQs) of the GOIs by dividing RQ over NF obtained in step 5. Data were saved in (rds) format.
+
+```{r dataset-nrq, echo = TRUE}
+data_NRQ <- dataset %>% 
+  filter(rtpcr %in% c("N","P")) %>%
+  mutate(across(all_of(names(geneEff)),
+                ~ geneEff[cur_column()]^(min(., na.rm = TRUE) - .),
+                .names = "{.col}_RQ")) %>%
+  mutate(NF = map2_dbl(ACTB_RQ, B2M_RQ, ~ prod(.x, .y, na.rm = TRUE) ^(1 / sum(c(!is.na(.x), !is.na(.y)))))) %>%
+  mutate(across(all_of(str_c(geneOI, "RQ", sep = "_")),
+                ~(. / NF),
+                .names = "{.col}_NRQ")) %>%
+  rename_with(~str_remove(., "_RQ"), .cols = all_of(str_c(geneOI, "RQ_NRQ", sep = "_"))) %>%
+  select(!ends_with("_RQ"), -NF) 
+
+saveRDS(object = data_NRQ, file = "./data-rds/data_NRQ.rds")
+```
+
+## Missing values in the data ##
+
+### Missing values of data apart from genes and cytokines ###
+
+The table below shows the number and proportion of missing values (NAs) in all variables of the dataset apart from genes and cytokines. 
+
+```{r nas-all-except-genes-cytokines}
+data_NRQ %>%
+  select(!starts_with(c(names(geneEff), Cytokine))) %>%
+  filter(rtpcr %in% c("N", "P")) %>%
+  summarise_all(list) %>%
+  mutate(across(everything(), ~map_int(., ~sum(is.na(.))))) %>%
+  pivot_longer(everything(), names_to = "Variable", values_to = "Missing") %>%
+  filter(Missing > 0) %>%
+  arrange(Missing) %>%
+  mutate(Total = sum(Missing)) %>%
+  mutate(proportion = num((Missing / Total * 100), digits = 2)) %>%
+  print(n = Inf)
+## DT::datatable()
+```
+### Missing values of genes by RT-qPCR ###
+
+The table below shows the number and proportion of the missing values for each of the `r length (geneEff)` genes measured by RT-qPCR.
+
+```{r nas-rtqpcr}
+data_NRQ %>%
+  filter(rtpcr %in% c("N", "P")) %>%
+  select(all_of(names(geneEff))) %>%
+  summarise_all(list) %>%
+  mutate(across(everything(), ~map_int(., ~sum(is.na(.))))) %>%
+  pivot_longer(everything(), names_to = "Gene", values_to = "Missing") %>%
+  filter(Missing > 0) %>%
+  arrange(Missing) %>%
+  mutate(Total = sum(Missing)) %>%
+  mutate(proportion = num((Missing / Total * 100), digits = 2)) %>%
+  print(n = Inf)
+## keep in mind that n = 4 from every gene was misssing because of lack of specimens at S2 visits from subjects 9 and 19
+```
+
+### Missing values of cytokines by BioPlex ###
+
+For the `r length (Cytokine)` cytokines measured by BioPlex, numbers and proportions of their missing values are shown in the table below.
+
+```{r nas-bioplex}
+data_NRQ %>%
+  filter(rtpcr %in% c("N", "P")) %>%
+  select(all_of(Cytokine)) %>%
+  summarise_all(list) %>%
+  mutate(across(everything(), ~map_int(., ~sum(is.na(.))))) %>%
+  pivot_longer(everything(), names_to = "Cytokine", values_to = "Missing") %>%
+  filter(Missing > 0) %>%
+  arrange(Missing) %>%
+  mutate(Total = sum(Missing)) %>%
+  mutate(proportion = num((Missing / Total * 100), digits = 2)) %>%
+  print(n = Inf)
+```
+
+## Imputations of the missing values ##
+
+Imputations were carried out in order to deal with the missing values in genes (NRQs) and cytokines. For the genes of interest (GOIs) a missing value was replaced by the (minimum / 2) value for each observation missing that gene. For the missing S2 specimens in subjects 9 and 19, a median value of the gene conditioned by HP status, visit, vaccine type and stomach site (antrum or corpus) was replaced.
+In case of the cytokines, all missing values were replaced by the (minimum / 2) values and when this resulted in having zero it was replaced by (1).
+
+```{r data-imputations-genes-cytokines}
+
+# Removal of S2 visits cases(Nbr 9, 19) 
+# Rescale each visit to its S2
+# Log transform the rescaled data
+# continue with statistical analysis
+## vacDF <- dget(file = "./data-dput-old/vacDF.txt")
+## View(vacDF)
+## genes <- c("actb", "b2m", "il8", "il17a", "p19", "p19r", "ebi3", "ebi3r", "p35", "p35r", "p40", "p40r", "p28r")
+## dplyr::rename(IL8 = il8, IL17A = il17a, IL23A = p19, IL23R = p19r, EBI3 = ebi3, IL6ST = ebi3r, IL12A = p35, IL12RB2 = p35r, IL12B = p40, IL12RB1 = p40r, IL27RA = p28r)
+## impute min/2 for all NRQs of GOIs except those with rtpcr = "N" because no specimens were provided at S2 visit (Nbr 9 and 19)
+## for rtpcr "N" at S2 the median NRQ was imputed after conditoning by HP, Site, Visit, Group for subjects 9 and 19
+## orig1 <- dget(file = "./data-dput-old/orig1.txt")
+## sum(is.na(orig1[orig1$rtpcr %in% c("S", "P"), 55:65])) # 359 NAs to be imputed min/2
+
+## Total readings 11 x 214 2354, so min/2 was imputed to 15% of the gene data
+## for BioPlex imputations of NA by 1 if zero or min/2 otherwise
+## BioPlex total NAs = 410 (rtpcr N and P, n = 218) out of total (218 x 27) = 5886 so 410/5886 = 6.97%
+
+data_NRQ <- readRDS(file = "./data-rds/data_NRQ.rds")
+
+data_imp <- data_NRQ %>%
+  filter(rtpcr == "P") %>%
+  mutate(across(ends_with("NRQ"), 
+                ~replace(., is.na(.), min(., na.rm = TRUE)/2))) %>%
+  bind_rows(filter(data_NRQ, rtpcr == "N")) %>%
+  arrange(ID) %>%
+  group_by(HP, Site, Visit, Group) %>%
+  mutate(across(ends_with("NRQ"),
+                ~ ifelse(is.na(.), median(., na.rm = TRUE), .))) %>%
+  ungroup() %>%
+  filter(rtpcr %in% c("N", "P")) %>%
+  mutate(across(all_of(Cytokine),
+                ~ ifelse(is.na(.), min(., na.rm = TRUE)/2, .))) %>%
+  mutate(across(all_of(Cytokine),
+                ~ ifelse(. == 0, 1, .))) %>%
+  select(!names(geneEff))
+```
+
+Other imputations were done as shown below and data with imputations were saved in (rds) format.
+
+```{r dataset-imp-others, echo = TRUE}
+
+data_imp[data_imp$ID == "1016V13a", "Acute"] <- "syd0" # missing Acute for antrum to be imputed like corpus
+data_imp[data_imp$ID == "1016V13a", "Chronic"] <- "Syd1" # missing Chronic for antrum to be imputed like corpus
+data_imp[data_imp$ID %in% c("1015V13a","1015V13c"),"FAT"] <- "FATn"
+data_imp[data_imp$ID %in% c("1006V12a","1006V12c"),"HP"]  <- "HPN" #converted from HPN to HPP at v12, aligned with V10
+data_imp[data_imp$ID %in% c("1016V13a","1016V13c"),"Culture"] <- "CULTn"
+
+## TODO: these imputations were not done in data_NRQ but can be done in the original dataset if needed (TBD)
+## data_imp[data_imp$ID %in% c("1040V13a","1040V13c"),"Culture"] <- "CULTn" 
+## data_imp[data_imp$ID %in% c("1040V13a","1040V13c"),"Histology"] <- "HISTn"
+## data_imp[data_imp$ID %in% c("1039V12a","1039V12c"),"Histology"] <- "HISTn"
+## data_imp[data_imp$ID %in% c("1039V12a","1039V12c"),"Culture"] <- "CULTn"
+## data_imp[data_imp$ID %in% c("1039V12a","1039V12c"),"UBT"] <- "UBTn"
+## data_imp[data_imp$ID %in% c("1039V12a","1039V12c"),"RUT"] <- "RUTn"
+
+saveRDS(data_imp, file = "./data-rds/data_imp.rds")
+```
+## Data transformations ##
+
+Data imputations were carried out to make logarthmic transformation possible especially when we have zero readings. At the same time this transformation would be useful when Principal Component Analysis (PCA) will be performed on the data. 
+Log2 transformation was applied to the following variables:
+
+1. Gastropanel markers (`r gPanel`)
+
+2. Antibodies to the vaccine components (`r vacAbs`)
+
+3. Genes of interest by RT-qPCR (`r geneOI`) 
+
+4. Cytokines by BioPlex (`r Cytokine`)
+
+```{r dataset-log2}
+data_imp <- readRDS(file = "./data-rds/data_imp.rds")
+
+data_log2 <- data_imp %>%
+  rename_with(~str_remove(., "_NRQ"), .cols = all_of(str_c(geneOI, "NRQ", sep = "_"))) %>%
+  pivot_longer(cols = c(all_of(gPanel), all_of(vacAbs), all_of(geneOI), all_of(Cytokine)), names_to = "Marker", values_to = "Value") %>%
+  mutate(log2 = log2(Value)) 
+
+saveRDS(data_log2, file = "./data-rds/data_log2.rds")
+```
+
+## Data exploration ##
+
+```{r explore-distribution, fig.dim = c(12, 8)}
+data_log2 <- readRDS(file = "./data-rds/data_log2.rds")
+
+data_log2 %>%
+  filter(Marker %in% c(geneOI, Cytokine)) %>%
+  mutate(group = Marker %in% Cytokine) %>%
+  group_by(Marker) %>%
+  mutate(PredAmt = dnorm(log2, mean(log2), sd(log2))) %>%
+  ungroup() %>%
+  ggplot(aes(x = log2)) +
+  geom_rect(aes(xmin = -Inf, xmax = Inf, ymin = 0.5, ymax = 0.75, fill = group, alpha = 0.3)) +
+  geom_histogram(aes(y = ..density..), fill = "White", color = "black", binwidth = 0.5, alpha = 0.3) +
+  geom_line(aes(y = PredAmt), color = "Firebrick", size = 0.3) +
+  scale_fill_manual(values = c("Gray", "LightSteelBlue")) +
+  ## geom_freqpoly(aes(x = log2, y = ..density..), fill= "white", color = "black", binwidth = 0.5) +
+  ## geom_freqpoly(aes(x = log2Value, y = ..density..), fill= "blue", color = "blue", binwidth = 0.5, alpha = 0.3) +
+  coord_cartesian(clip = "off", ylim = c(0, 0.5)) +
+  facet_wrap( ~ fct_inorder(Marker), scales = "free") + 
+  labs(x = "log2 value (n=218), the red curve indicates normal distribution", y = NULL, caption = "Strip color indicates the technique used: RT-qPCR (gray) or Bioplex (blue)") + 
+  theme(strip.background = element_rect(fill = NA), legend.position = "none")
+
+## ggsave(last_plot(), file = paste("./plots","log2_histograms.pdf",sep="/"), width = 14, height = 8, units = "in", dpi = 600)
+```
+
+## Preparing data for PCA ##
+
+
+```{r dataset-pca}
+data_log2 <- readRDS(file = "./data-rds/data_log2.rds")
+
+data_pca <- data_log2 %>%
+  ## filter(Marker %in% geneOI) %>%
+  select(-Value) %>%
+  pivot_wider(names_from = Marker, values_from = log2) %>%
+  arrange(Nbr) %>%
+  mutate(tag = ifelse(is.na(Site) == FALSE,
+                      paste0(Nbr,"_",
+                             tolower(substr(Sex,1,1)),
+                             tolower(substr(Group,1,1)),
+                             tolower(Visit), tolower(substr(Site,1,1)),
+                             sep=""),
+                      NA)) %>%
+  mutate(Tag = as.factor(str_c(substr(Sex,1,1), substr(Group,1,1), substr(HP,3,3), "_", Nbr, sep = ""))) %>%
+  mutate(Tag = fct_reorder(Tag, -desc(Nbr)))
+
+
+PCA_all <- c("IL8", "IL17A", "IL23A", "IL23R", "EBI3", "IL6ST", "IL12A", "IL12RB2", "IL12B", "IL12RB1", "IL27RA", "Age", "HPDays", "PG1", "PG2", "G17", "HPIgG", "CagA", "VacA", "NAP",  "PDGF-BB", "IL-1B", "IP-10", "IL-1ra", "IL-2", "IL-4", "IL-5", "IL-6", "IL-7", "IL-8", "IL-9", "IL-10", "IL-12", "IL-13", "IL-15", "IL-17", "Eotaxin", "FGF-basic", "G-CSF", "GM-CSF", "IFN-g", "MCP-1", "MIP-1a", "MIP-1b", "RANTES", "TNF-a", "VEGF", "Sex", "Group", "Visit", "Site", "HP","UBT", "FAT", "Acute", "Chronic", "RUT")
+
+PCA_quanti <- c("Age", "HPDays", "PG1", "PG2", "G17", "HPIgG", "CagA", "VacA", "NAP", "PDGF-BB", "IL-1B", "IP-10", "IL-1ra", "IL-2", "IL-4", "IL-5", "IL-6", "IL-7", "IL-8", "IL-9", "IL-10", "IL-12", "IL-13", "IL-15", "IL-17", "Eotaxin", "FGF-basic", "G-CSF", "GM-CSF", "IFN-g", "MCP-1", "MIP-1a", "MIP-1b", "RANTES", "TNF-a", "VEGF")
+
+PCA_quali <- c("Sex", "Group", "Visit", "Site", "HP","UBT", "FAT", "RUT", "Acute", "Chronic")
+
+pca_df <- data_pca %>%
+  select(all_of(PCA_quali), all_of(PCA_quanti), all_of(geneOI), everything()) %>%
+  as.data.frame() %>%
+  column_to_rownames("tag")
+
+pcaFM <- FactoMineR::PCA(pca_df[1:57],
+                             quali.sup = 1:10,
+                             quanti.sup = 11:46,
+                             scale.unit = TRUE, graph = FALSE)
+
+pca_df$PC1 <- pcaFM$ind$coord[, 1]
+pca_df$PC2 <- pcaFM$ind$coord[, 2]
+
+summary.PCA(pcaFM, ncp = 4)
+
+factoextra::fviz_eig(pcaFM, choice = "variance", addlabels = TRUE, ylim = c(0, 50), barfill = "LightBlue", barcolor = "LightBlue", ggtheme = theme_light())
+
+saveRDS(object = pca_df, file = "./data-rds/pca_df.rds") 
+```
+
+```{r pca-plots}
+pca_df <- readRDS(file = "./data-rds/pca_df.rds")
+
+fviz_pca_var(pcaFM, col.var = "contrib",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             axes = c(1, 2),
+             geom.var = c("arrow", "text"),
+             invisible = "quanti.sup", 
+             repel = TRUE,
+             title = "PCA - Biplot")
+
+fviz_pca_var(pcaFM, col.var = "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             axes = c(1, 2),
+             geom.var = c("arrow", "text"),
+             invisible = "quanti.sup", 
+             repel = TRUE,
+             title = "PCA - Biplot",
+             ggtheme = theme_light()
+             )
+
+fviz_pca_var(pcaFM, col.var = "cos2",
+             gradient.cols = c("#00AFBB", "#E7B800", "#FC4E07"),
+             axes = c(1, 2),
+             geom.var = c("arrow", "text"),
+             invisible = "none", 
+             repel = TRUE,
+             title = "PCA - Biplot"
+             )
+
+fviz_pca_ind(pcaFM, col.ind = "cos2",
+             geom = c("point", "text"),
+             gradient.cols = c("white", "#2E9FDF", "#FC4E07" ),
+             repel = FALSE
+             )
+
+
+fviz_pca_ind(pcaFM, col.ind = "cos2",
+             geom = c("point", "text"),
+             gradient.cols = c("white", "#2E9FDF", "#FC4E07" ),
+             repel = TRUE
+             )
+
+fviz_pca_ind(pcaFM, col.ind = "contrib",
+             geom = c("point", "text"),
+             gradient.cols = c("white", "#2E9FDF", "#FC4E07" ),
+             repel = TRUE
+             )
+
+fviz_contrib(pcaFM, choice = "var", axes = 1, top = 10) # IL12RB2 is contributing the most
+
+fviz_contrib(pcaFM, choice = "var", axes = 2, top = 10) # IL12B is contributing the most
+
+fviz_contrib(pcaFM, choice = "var", axes = 3, top = 10) # IL23A is contributing the most
+
+fviz_contrib(pcaFM, choice = "var", axes = 4, top = 10) # IL27RA is contributing the most
+```
+
+## Assessing clustering tendency ##
+
+To assess whether the current data set is clusterable or not, Hopkins statistic (H) was done and it showed a value above 0.75 which indicates a clustering tendency at the 90% confidence level.
+There is also a visual method to assess clustering tendencey (Visual Assessment of cluster Tendency VAT) by using the following steps:
+
+1. Compute the dissimilarity (DM) matrix between the objects in the data set using the Euclidean distance measure
+
+2. Reorder the DM so that similar objects are close to one another. This process create an ordered dissimilarity matrix (ODM)
+
+3. The ODM is displayed as an ordered dissimilarity image (ODI), which is the visual output of VAT
+
+The color level is proportional to the value of the dissimilarity between observations. Pure red distance is 0 while 1 in pure blue.
+The VAT detects the clustering tendency in a visual form by counting the number of square shaped dark blocks along the diagonal in a VAT image.
+
+Now since this data set contains meaningful clusters, the next step is to determine what is the optimal number of clusters.. 
+
+```{r clustering-tendency}
+get_clust_tendency(pca_df[c("PC1", "PC2")], n = 100, graph = TRUE, seed = 123)
+```
+
+## Determining the optimal number of clusters ##
+There are different clustering methods that can be performed on the data set, these methods are the following:
+
+1. Partitioning methods
+   
+   a. K-means (Euclidean distance measue)
+   
+   b. Partitioninng around medoids or K medoids clustering (PAM)
+   
+   c. Clustering Large Applications (CLARA) which is not needed since this algoirthm is designed for large data sets more than 2000 observations
+ 
+2. Hierarchical clustering
+
+	a. Hierarchical agglomerative clustering (HAC): can be performed using different distance measures (Euclidean or Manhatten) with different linkage methods (Ward, complete, average or single)
+	
+	b. AGglomerative NESting hierarchical clustering algorithm (AGNES) which is a bottom-top approach hierarchical clustering and opposite to DIANA
+	
+	c. DIvisie ANAlysis clustering algorithm (DIANA) which is a top-down approach form of hierarchical clustering and it produces large clusters
+	
+3. Advanced clustering 
+
+	a. Hierarchical K-means Clustering
+	
+	b. Fuzzy clustering (FANNY)
+	
+	c. Model-Based Clustering
+	
+	d. DBSCAN: Density-Based Clustering
+
+### K-means ###
+For k-means clustering the tests below show the optimal number of clusters for the current data set. 
+
+```{r cluster-number-kmeans}
+cluster_df <- readRDS(file = "./data-rds/pca_df.rds")
+resKm <- NbClust::NbClust(cluster_df[c("PC1", "PC2")], distance = "euclidean", min.nc = 2, max.nc = 11, method = "kmeans", index ="all")
+
+resKm$Best.nc
+resKm$All.index
+resKm$All.CriticalValues
+
+fviz_nbclust(cluster_df[c("PC1", "PC2")], kmeans, method = c("gap_stat"))
+
+cluster_df$Kmeans <- resKm$Best.partition
+```
+
+### PAM ###
+
+Performing the same tests for PAM clustering showed the following results.
+
+```{r cluster-number-pam}
+fviz_nbclust(cluster_df[c("PC1", "PC2")], cluster::pam, method = c("gap_stat")) # indicates 3 clusters
+
+resPAM <- eclust(cluster_df[c("PC1", "PC2")], "pam", k = 3, graph = FALSE) # more robust than kmeans
+cluster_df$PAM <- resPAM$clustering
+```
+
+### CLARA ###
+
+The same tests to determine the optimal number of clusters were done for CLARA method as well as shown below.
+
+```{r cluster-number-clara}
+
+fviz_nbclust(cluster_df[c("PC1", "PC2")], cluster::clara, method = c("gap_stat")) # indicates 3 clusters
+
+resCLARA <- eclust(cluster_df[c("PC1", "PC2")], "clara", k = 3, graph = FALSE)
+cluster_df$CLARA <- resCLARA$clustering
+```
+
+### HAC ###
+
+These tests were done for the HAC method to determine the optimal number of clusters given the curernt data as shown below.
+
+```{r cluster-number-hac}
+# Note that ‘agnes(*, method="ward")’ corresponds to ‘hclust(*, "ward.D2")’.
+resHAC <- eclust(cluster_df[c("PC1", "PC2")], "hclust", hc_metric = "euclidean", hc_method = "ward.D2", k = 3, graph = FALSE, seed = 123)
+
+fviz_dend(resHAC, rect = FALSE, show_labels = FALSE, k_colors = c("#E31A1C","#332288", "#66A61E"))
+
+fviz_dend(resHAC, rect = FALSE, show_labels = TRUE, k_colors = c("#E31A1C","#332288", "#66A61E"), type = "circular", cex = 0.5)
+
+## hcpcFM <- HCPC(pcaFM, consol=FALSE, nb.clust = 3, graph = FALSE)
+
+fviz_nbclust(cluster_df[c("PC1", "PC2")], hcut, method = c("gap_stat")) # indicates 3 clusters
+
+cluster_df$HAC <- resHAC$cluster
+```
+
+### AGNES ###
+
+For AGNES method the results of the same tests are shown below.
+
+```{r cluster-number-agnes}
+resAGNES <- eclust(cluster_df[c("PC1", "PC2")], "agnes", hc_metric = "manhattan", hc_method = "ward.D2", k = 3, graph = FALSE, seed = 123)
+fviz_dend(resAGNES, rect = FALSE, show_labels = FALSE, k_colors = c("#332288", "#66A61E", "#E31A1C"))
+
+fviz_dend(resAGNES, rect = FALSE, show_labels = TRUE, k_colors = c("#332288", "#66A61E", "#E31A1C"), type = "circular", cex = 0.5)
+
+## fviz_nbclust(cluster_df[c("PC1", "PC2")], cluster::agnes, method = c("gap_stat"))
+
+cluster_df$AGNES <- resAGNES$cluster
+```
+
+### DIANA ###
+
+The results of the same tests for DIANA method are shown below.
+
+```{r cluster-number-diana}
+## fviz_nbclust(cluster_df[c("PC1", "PC2")], cluster::diana, method = c("gap_stat"))
+resDIANA <- eclust(cluster_df[c("PC1", "PC2")], "diana", hc_metric = "canberra", hc_method = "ward.D2", k = 3, graph = FALSE, seed = 123)
+
+fviz_dend(resDIANA, rect = FALSE, show_labels = FALSE, k_colors = c("#66A61E", "#332288", "#E31A1C"))
+
+fviz_dend(resDIANA, rect = FALSE, show_labels = TRUE, k_colors = c("#66A61E", "#332288", "#E31A1C"), type = "circular", cex = 0.5)
+
+cluster_df$DIANA <- resDIANA$cluster
+```
+
+### FANNY ###
+
+These tests were also done for FANNY method of clustering to determine the optimal number of clusters as shown below.
+
+```{r cluster-number-fanny, cache = TRUE}
+fviz_nbclust(cluster_df[c("PC1", "PC2")], cluster::fanny, method = c("gap_stat")) # indicates 3 clusters todo: uncomment later takes a long time
+
+resFANNY <- eclust(cluster_df[c("PC1", "PC2")], "fanny", k = 3, graph = TRUE)
+cluster_df$FANNY <- resFANNY$clustering
+```
+
+```{r dataset-clusters}
+saveRDS(object = cluster_df, file = "./data-rds/cluster_df.rds") 
+```
+
+## Clustering validation statistics ##
+```{r clustering-validation}
+cluster_df <- readRDS(file = "./data-rds/cluster_df.rds")
+res.hc <- eclust(cluster_df[c("PC1", "PC2")], "hclust", k = 3, graph = FALSE, seed = 123)
+## fviz_silhouette(res.hc, palette = c("#00AFBB", "#E7B800", "#FC4E07"), rotate = FALSE)
+fviz_silhouette(res.hc, palette = c("#332288", "#66A61E", "#E31A1C"), rotate = FALSE)
+# Silhouette width of observations
+sil <- res.hc$silinfo$widths[, 1:3]
+# Objects with negative silhouette
+neg_sil_index <- which(sil[, "sil_width"] < 0)
+sil[neg_sil_index, , drop = FALSE]
+```
+
+## Measures for comparing clustering algorithms ##
+
+```{r compare-algorithms}
+# https://www.datanovia.com/en/lessons/choosing-the-best-clustering-algorithms/
+cluster_df <- readRDS(file = "./data-rds/cluster_df.rds")
+clmethods <- c("hierarchical", "kmeans", "diana", "fanny", "pam", "clara", "agnes")
+
+validInt <- clValid(cluster_df[c("PC1", "PC2")], nClust = 2:5, clMethods = clmethods, validation = "internal", metric = "euclidean", method = "average")
+summary(validInt)
+```
+Cluster have been determined in the data based on the first two principal components using 7 different algorithms.
+Then each cluster had to be assigned one of these 3 labels: Proactive (P), Quiescent (Q), or Reactive (R) labels based on prior knowledge of the study design. 
+It was natural to assign Q to the specimens at S02 (screening) visit and P clusters to certain individuals who demonstrated a consistent pattern with this label throughout multiple visits of the study. This individual pattern was consistent among the different algorithms.
+Five algorithms were very similar in their pattern regarding the 3 distinct clusters. Two algorithms showed relatively a different pattern: DIANA tends to maximize the Q while FANNY tends to maximize the P cluster.
+It is interesting though to see a consistent assignment of the P cluster to the same individuals at multiple visits no matter what algorithm was used. 
+
+```{r dataset-cluster}
+cluster_df <- readRDS(file = "./data-rds/cluster_df.rds")
+
+cluster_df$tag <- rownames(cluster_df)
+
+data_cluster <- as_tibble(cluster_df)
+
+data_cluster <- data_cluster %>%
+  mutate(HAC = as.factor(HAC),
+         AGNES = as.factor(AGNES),
+         Kmeans = as.factor(Kmeans),
+         CLARA = as.factor(CLARA),
+         PAM = as.factor(PAM),
+         FANNY = as.factor(FANNY),
+         DIANA = as.factor(DIANA)) %>%
+    mutate(HAC = fct_recode(HAC,
+                            "P" = "3",
+                            "Q" = "1",
+                            "R" = "2")) %>%
+    mutate(AGNES = fct_recode(AGNES,
+                              "P" = "3",
+                              "Q" = "1",
+                              "R" = "2")) %>%
+    mutate(Kmeans = fct_recode(Kmeans,
+                               "P" = "2",
+                               "Q" = "1",
+                               "R" = "3")) %>%
+    mutate(CLARA = fct_recode(CLARA,
+                              "P" = "3",
+                            "Q" = "1",
+                            "R" = "2")) %>%
+  mutate(PAM = fct_recode(PAM,
+                          "P" = "3",
+                          "Q" = "1",
+                          "R" = "2")) %>%
+  mutate(FANNY = fct_recode(FANNY,
+                            "P" = "3",
+                            "Q" = "1",
+                            "R" = "2")) %>%
+  mutate(DIANA = fct_recode(DIANA,
+                            "P" = "3",
+                            "Q" = "1",
+                            "R" = "2")) %>%
+  mutate(HAC = fct_relevel(HAC, sort),
+         AGNES = fct_relevel(AGNES, sort),
+         Kmeans = fct_relevel(Kmeans, sort),
+         CLARA = fct_relevel(CLARA, sort),
+         PAM = fct_relevel(PAM, sort),
+         FANNY = fct_relevel(FANNY, sort),
+         DIANA = fct_relevel(DIANA, sort))
+
+data_cluster  %>%
+  select(Kmeans:FANNY) %>%
+  pivot_longer(Kmeans:FANNY, names_to = "Algorithm", values_to = "Clusters") %>%
+  group_by(Algorithm) %>%
+  count(Clusters) %>%
+  pivot_wider(names_from = "Clusters", values_from = n) %>%
+  arrange(P, Q, R)
+
+saveRDS(object = data_cluster, file = "./data-rds/data_cluster.rds")
+```
+
+```{r cluster-plots, fig.dim = c(6, 8)}
+data_cluster <- readRDS(file = "./data-rds/data_cluster.rds")
+
+ggplot(data = data_cluster) +
+  geom_tile(aes(Visit, fct_rev(Tag), fill = HAC)) + 
+  scale_fill_manual(guide = guide_legend(), name = "Clusters", values = c("#E31A1C","#332288", "#66A61E"), labels = c("P", "Q", "R")) +
+  labs(caption = "HAC (Euclidean)", x = NULL, y = NULL) +
+  facet_wrap(. ~ Site) +
+  theme_light()
+
+ggplot(data = data_cluster) +
+  geom_tile(aes(Visit, fct_rev(Tag), fill = AGNES)) + 
+  scale_fill_manual(guide = guide_legend(), name = "Clusters", values = c("#E31A1C","#332288", "#66A61E"), labels = c("P", "Q", "R")) +
+  labs(caption = "AGNES (Manhattan)", x = NULL, y = NULL) +
+  facet_wrap(. ~ Site) +
+  theme_light()
+
+ggplot(data = data_cluster) +
+  geom_tile(aes(Visit, fct_rev(Tag), fill = CLARA)) + 
+  scale_fill_manual(guide = guide_legend(), name = "Clusters", values = c("#E31A1C","#332288", "#66A61E"), labels = c("P", "Q", "R")) +
+  labs(caption = "CLARA", x = NULL, y = NULL) +
+  facet_wrap(. ~ Site) +
+  theme_light()
+
+ggplot(data = data_cluster) +
+  geom_tile(aes(Visit, fct_rev(Tag), fill = Kmeans)) + 
+  scale_fill_manual(guide = guide_legend(), name = "Clusters", values = c("#E31A1C","#332288", "#66A61E"), labels = c("P", "Q", "R")) +
+  ## scale_fill_manual(guide = guide_legend(), name = "Clusters", values = c("#332288","#66A61E","#E31A1C"), labels = c("P", "Q", "R")) +
+  ## scale_fill_manual(name = "Clusters", values = c("#332288","#E31A1C", "#66A61E"), labels = c("P", "Q", "R")) +
+  ## theme_light(base_size = 14) +
+  labs(caption = "Kmeans", x = NULL, y = NULL) +
+  facet_wrap(. ~ Site) +
+  theme_light()
+
+ggplot(data = data_cluster) +
+  geom_tile(aes(Visit, fct_rev(Tag), fill = PAM)) + 
+  scale_fill_manual(guide = guide_legend(), name = "Clusters", values = c("#E31A1C","#332288", "#66A61E"), labels = c("P", "Q", "R")) +
+  labs(caption = "PAM", x = NULL, y = NULL) +
+  facet_wrap(. ~ Site) +
+  theme_light()
+
+ggplot(data = data_cluster) +
+  geom_tile(aes(Visit, fct_rev(Tag), fill = DIANA)) + 
+  scale_fill_manual(guide = guide_legend(), name = "Clusters", values = c("#E31A1C","#332288", "#66A61E"), labels = c("P", "Q", "R")) +
+  labs(caption = "DIANA (Canberra)", x = NULL, y = NULL) +
+  facet_wrap(. ~ Site) +
+  theme_light()
+
+ggplot(data = data_cluster) +
+  geom_tile(aes(Visit, fct_rev(Tag), fill = FANNY)) + 
+  scale_fill_manual(guide = guide_legend(), name = "Clusters", values = c("#E31A1C","#332288", "#66A61E"), labels = c("P", "Q", "R")) +
+  labs(caption = "FANNY", x = NULL, y = NULL) +
+  facet_wrap(. ~ Site) +
+  theme_light()
+```
+
+## Comparing antrum with corpus clustering ##
+
+```{r dataset-hp}
+cluster_df <- readRDS(file = "./data-rds/cluster_df.rds")
+Antrum <- cluster_df %>%
+  filter(Site == "Antrum") %>%
+  select(Tag, PC1, PC2)
+
+Corpus <- cluster_df %>%
+  filter(Site == "Corpus") %>%
+  select(Tag, PC1, PC2)
+  
+
+hacA <- eclust(Antrum[c("PC1", "PC2")], "hclust", hc_metric = "euclidean", hc_method = "ward.D2", k = 3, graph = FALSE, seed = 123)
+hacC <- eclust(Corpus[c("PC1", "PC2")], "hclust", hc_metric = "euclidean", hc_method = "ward.D2", k = 3, graph = FALSE, seed = 123)
+
+df1 <- NULL
+df1$HAC_AC <- hacA$cluster
+df1$tag <- hacA$labels
+df1 <- as_tibble(df1)
+
+df2 <- NULL
+df2$HAC_AC <- hacC$cluster
+df2$tag <- hacC$labels
+df2 <- as_tibble(df2)
+
+df2 <- df2 %>%
+  mutate(HAC_AC = as.factor(HAC_AC)) %>%
+  mutate(HAC_AC = fct_recode(HAC_AC,
+                            "3" = "3",
+                            "2" = "1",
+                            "1" = "2"))
+
+DF_AC <- rbind(df1, df2)
+
+data_hp <- data_cluster %>%
+  left_join(DF_AC, by = "tag") %>%
+  mutate(HAC_AC = as.factor(HAC_AC)) %>%
+  mutate(HAC_AC = fct_recode(HAC_AC,
+                            "P" = "3",
+                            "Q" = "1",
+                            "R" = "2")) %>%
+  mutate(HAC_AC = fct_relevel(HAC_AC, sort))
+
+saveRDS(object = data_hp, file = "./data-rds/data_hp.rds")
+```
+HAC clustering was performed separately on the antrum and corpus data. The two patterns look very similar to each other. 
+Then clusters of both the antrum and corpus data were combined into one as depicted below in order to be compared with the HAC pattern that was derived from the whole data. 
+It has been shown that except for a few cluster elements, membership assignment using antrum or corpus data separately was identical to the one derived from the whole data.
+
+```{r antrum-corpus-cluster-compare, fig.dim = c(6, 8)}
+data_hp <- readRDS(file = "./data-rds/data_hp.rds" )
+
+ggplot(data = data_hp) +
+  geom_tile(aes(Visit, fct_rev(Tag), fill = HAC_AC)) + 
+  scale_fill_manual(guide = guide_legend(), name = "Clusters", values = c("#E31A1C","#332288", "#66A61E"), labels = c("P", "Q", "R")) +
+  labs(caption = "HAC (based on separate antrum and corpus data)", x = NULL, y = NULL) +
+  facet_wrap(. ~ Site) +
+  theme_light()
+```
+
+```{r session-packages}
+sessionInfo()
+```

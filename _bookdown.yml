@@ -1,0 +1,16 @@
+site: bookdown::bookdown_site
+output:
+  bookdown::gitbook:
+    highlight: tango
+    split_bib: no
+documentclass: book
+github-repo: ffsammak/manuscript
+book_filename: "manuscript"
+rmd_files: ["index.Rmd","introduction.Rmd","references.Rmd"]
+description: "Using the bookdown package to write a manuscript. The output format is bookdown::gitbook."
+delete_merged_file: true
+output_dir: "docs"
+    
+
+              
+              
