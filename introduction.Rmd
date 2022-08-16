@@ -1,5 +1,6 @@
 # Introduction {-}
 
+This is a new line to test the workflow.
 The coexistence of _Helicobacter pylori_ (HP) with humans dates back to ancient times. 
 However, it is the discovery of this microorganism about four dacades ago by that started to raise increasing awareness to its presence worldwide [@marshallUnidentifiedCurvedBacilli1984].
 
